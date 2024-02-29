@@ -11,6 +11,7 @@ class NameListWidget extends StatefulWidget {
 class NameListWidgetState extends State<NameListWidget> {
   List<String> names = [];
   DateTime? _selectedDate;
+  int personCount = 0;
 
   final TextEditingController _controller = TextEditingController();
   final TextEditingController _controllerMonth = TextEditingController();
@@ -23,6 +24,7 @@ class NameListWidgetState extends State<NameListWidget> {
       if (newName.isNotEmpty) {
         names.add(newName);
         _controller.clear();
+        personCount = personCount + 1;
       }
     });
   }
@@ -30,6 +32,7 @@ class NameListWidgetState extends State<NameListWidget> {
   void _deleteName(int index) {
     setState(() {
       names.removeAt(index);
+      personCount = personCount - 1;
     });
   }
 
@@ -176,7 +179,7 @@ class NameListWidgetState extends State<NameListWidget> {
                 ],
               ),
               const SizedBox(height: 20),
-              const Text('Name of the Persons'),
+              Text('Number of the Persons ${personCount.toString()}'),
               const SizedBox(height: 20),
               ListView.builder(
                 shrinkWrap: true,

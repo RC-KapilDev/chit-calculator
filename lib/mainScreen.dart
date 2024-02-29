@@ -37,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (spList == null) {
       return;
     } else {
-      noOfChit = spList!.map((item) => Chit.fromMap(jsonDecode(item))).toList();
+      noOfChit = spList.map((item) => Chit.fromMap(jsonDecode(item))).toList();
       setState(() {});
     }
   }

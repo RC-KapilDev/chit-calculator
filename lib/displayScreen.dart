@@ -13,6 +13,13 @@ class DisplayScreen extends StatefulWidget {
 }
 
 class _DisplayScreenState extends State<DisplayScreen> {
+  double bufferAmount = 0;
+  @override
+  void initState() {
+    bufferAmount = toCalculateBuffer(widget.chit);
+    super.initState();
+  }
+
   double amount = 0;
   int monthDiff(DateTime date) {
     DateTime otherDate = date;
@@ -23,11 +30,16 @@ class _DisplayScreenState extends State<DisplayScreen> {
     return totalMonthDiff + 1;
   }
 
-  toCalculate(Chit chit, int bid) {
+  toCalculateBuffer(Chit chit) {
     int noOfPeople = chit.people.length - monthDiff(chit.date);
     double buffer = (chit.amount * (1 / 100)) * noOfPeople;
-    double deductable = chit.amount - (buffer + bid);
-    double shareAmount = deductable / (chit.people.length - 1);
+    return buffer;
+  }
+
+  toCalculate(Chit chit, int bid) {
+    double buff = toCalculateBuffer(chit);
+    double deductable = chit.amount - (buff + bid);
+    double shareAmount = deductable / (chit.people.length);
     return shareAmount;
   }
 
@@ -37,7 +49,7 @@ class _DisplayScreenState extends State<DisplayScreen> {
     var jiffy = Jiffy.parseFromDateTime(widget.chit.date);
     var jiffy1 = jiffy.add(months: widget.chit.months);
 
-    final TextEditingController _controllerBid = TextEditingController();
+    final TextEditingController controllerBid = TextEditingController();
     return Material(
       child: SingleChildScrollView(
         child: Column(
@@ -77,7 +89,7 @@ class _DisplayScreenState extends State<DisplayScreen> {
                           children: [
                             Text(
                               '${widget.chit.months}',
-                              style: TextStyle(fontSize: 60),
+                              style: const TextStyle(fontSize: 60),
                             )
                           ],
                         )
@@ -108,14 +120,15 @@ class _DisplayScreenState extends State<DisplayScreen> {
               ],
             ),
             Container(
-              margin: EdgeInsets.all(20),
+              margin: const EdgeInsets.all(20),
               width: double.infinity,
-              child: const Card(
+              child: Card(
                 child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 20, horizontal: 10),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
                   child: Text(
-                    'List of People',
-                    style: TextStyle(fontSize: 17),
+                    'Calculated Amount :  ${bufferAmount.toString()}',
+                    style: const TextStyle(fontSize: 17),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -133,7 +146,7 @@ class _DisplayScreenState extends State<DisplayScreen> {
                         Expanded(
                           flex: 3,
                           child: TextField(
-                            controller: _controllerBid,
+                            controller: controllerBid,
                             decoration: const InputDecoration(
                               border: OutlineInputBorder(),
                               labelText: 'Enter Bit Amount',
@@ -147,7 +160,7 @@ class _DisplayScreenState extends State<DisplayScreen> {
                           flex: 1,
                           child: ElevatedButton(
                             onPressed: () {
-                              var bid = int.tryParse(_controllerBid.text);
+                              var bid = int.tryParse(controllerBid.text);
                               amount = toCalculate(widget.chit, bid!);
                               if (amount == 0) {
                                 return;
@@ -166,7 +179,7 @@ class _DisplayScreenState extends State<DisplayScreen> {
                     ),
                   ),
                   boolean == true
-                      ? ListPeople(amount, widget.chit)
+                      ? ListPeople(amount.ceil(), widget.chit)
                       : const Text('Please Enter a Bid'),
                 ]))
           ],
@@ -175,7 +188,7 @@ class _DisplayScreenState extends State<DisplayScreen> {
     );
   }
 
-  ListView ListPeople(double amt, Chit chit) {
+  ListView ListPeople(int amt, Chit chit) {
     return ListView.builder(
       shrinkWrap: true,
       itemCount: chit.people.length,
