@@ -1,6 +1,9 @@
+import 'package:chit_calculator/cubit/chit_cubit.dart';
 import 'package:flutter/material.dart';
-import 'datamodel.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../model/datamodel.dart';
 import 'package:jiffy/jiffy.dart';
+import 'package:chit_calculator/widgets/card_names.dart';
 
 const ktextStyle = TextStyle(fontSize: 25);
 
@@ -56,6 +59,14 @@ class _DisplayScreenState extends State<DisplayScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             AppBar(
+              actions: [
+                IconButton(
+                    onPressed: () {
+                      context.read<ChitCubit>().chitDelete(widget.chit);
+                      Navigator.pop(context);
+                    },
+                    icon: const Icon(Icons.delete))
+              ],
               title: Text(
                 widget.chit.name,
               ),
@@ -211,33 +222,6 @@ class _DisplayScreenState extends State<DisplayScreen> {
                       ),
                     ))));
       },
-    );
-  }
-}
-
-class Displaycard extends StatelessWidget {
-  Displaycard({super.key, required this.data, required this.name});
-
-  dynamic data;
-  String name;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-            child: Text(
-              '$name $data',
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-            ),
-          ),
-        ),
-        const SizedBox(
-          height: 5,
-        ),
-      ],
     );
   }
 }

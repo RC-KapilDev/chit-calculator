@@ -1,14 +1,28 @@
+import 'package:chit_calculator/cubit/chit_cubit.dart';
 import 'package:flutter/material.dart';
-import 'datamodel.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../model/datamodel.dart';
 
 class NameListWidget extends StatefulWidget {
-  const NameListWidget({super.key, required this.addChitData});
-  final void Function(Chit chit) addChitData;
+  const NameListWidget({super.key});
+
   @override
   NameListWidgetState createState() => NameListWidgetState();
 }
 
 class NameListWidgetState extends State<NameListWidget> {
+  late SharedPreferences sharedPreferences;
+  @override
+  void initState() {
+    super.initState();
+    initSharedPreferences();
+  }
+
+  initSharedPreferences() async {
+    sharedPreferences = await SharedPreferences.getInstance();
+  }
+
   List<String> names = [];
   DateTime? _selectedDate;
   int personCount = 0;
@@ -70,13 +84,31 @@ class NameListWidgetState extends State<NameListWidget> {
                 ],
               ));
     }
-    widget.addChitData(Chit(
-        name: _controllerName.text,
-        months: entredMonth,
-        people: names,
-        amount: entredAmount!,
-        date: _selectedDate!));
+    context.read<ChitCubit>().addChit(
+        Chit(
+            name: _controllerName.text,
+            months: entredMonth,
+            people: names,
+            amount: entredAmount!,
+            date: _selectedDate!),
+        sharedPreferences);
+
+    // widget.addChitData(Chit(
+    //     name: _controllerName.text,
+    //     months: entredMonth,
+    //     people: names,
+    //     amount: entredAmount!,
+    //     date: _selectedDate!));
     Navigator.pop(context);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _controllerAmount.dispose();
+    _controllerMonth.dispose();
+    _controllerName.dispose();
+    super.dispose();
   }
 
   @override
