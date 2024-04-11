@@ -1,5 +1,7 @@
 import 'package:chit_calculator/cubit/chit_cubit.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../model/datamodel.dart';
@@ -28,6 +30,8 @@ class NameListWidgetState extends State<NameListWidget> {
   int personCount = 0;
 
   final TextEditingController _controller = TextEditingController();
+
+  final TextEditingController _controllerBit = TextEditingController();
   final TextEditingController _controllerMonth = TextEditingController();
   final TextEditingController _controllerName = TextEditingController();
   final TextEditingController _controllerAmount = TextEditingController();
@@ -62,43 +66,81 @@ class NameListWidgetState extends State<NameListWidget> {
   }
 
   void _submitChitData() {
-    final entredMonth = int.tryParse(_controllerMonth.text);
-    final entredAmount = int.tryParse(_controllerAmount.text);
-    if (entredMonth! <= 0 ||
-        _selectedDate == null ||
-        names.isEmpty ||
-        _controllerName.text == "" ||
-        _controllerAmount.text == "") {
-      showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-                title: const Text('Invalid Input'),
-                content: const Text(
-                    'please make sure a valid month , starting date , atleast one person is included '),
-                actions: [
-                  ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: const Text('Okay'))
-                ],
-              ));
-    }
-    context.read<ChitCubit>().addChit(
-        Chit(
-            name: _controllerName.text,
-            months: entredMonth,
-            people: names,
-            amount: entredAmount!,
-            date: _selectedDate!),
-        sharedPreferences);
+    final enteredMonth = int.tryParse(_controllerMonth.text);
+    final enteredAmount = int.tryParse(_controllerAmount.text);
+    final enteredBitDate = int.tryParse(_controllerBit.text);
 
-    // widget.addChitData(Chit(
-    //     name: _controllerName.text,
-    //     months: entredMonth,
-    //     people: names,
-    //     amount: entredAmount!,
-    //     date: _selectedDate!));
+    List<String> errors = [];
+
+    // Validate input fields
+    if (enteredAmount == null) {
+      errors.add('Please enter a valid amount.');
+    }
+    if (enteredMonth == null) {
+      errors.add('Please enter a valid number of months.');
+    }
+    if (enteredBitDate == null || enteredBitDate <= 0 || enteredBitDate > 28) {
+      errors.add(
+          'Please enter a valid BitDate and Bitdate Should be within 1 to 28 Date.');
+    }
+    if (names.isEmpty || names.length != enteredMonth) {
+      errors.add(
+          'Ensure number of persons should be is equal to the no.of month.');
+    }
+    if (_controllerName.text.isEmpty) {
+      errors.add('Please enter the name of the Chit.');
+    }
+    if (_selectedDate == null) {
+      errors.add('Please select a starting date.');
+    }
+
+    // Check if there are any validation errors
+    if (errors.isNotEmpty) {
+      // Show dialog with error messages
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Invalid Input'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: errors.map((error) => Text(error)).toList(),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+              },
+              child: const Text('Okay'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // All input fields are valid, proceed to add chit data
+    context.read<ChitCubit>().addChit(
+          Chit(
+            name: _controllerName.text,
+            months: enteredMonth!,
+            people: names,
+            amount: enteredAmount!,
+            date: _selectedDate!,
+            bitDate: enteredBitDate!,
+          ),
+          sharedPreferences,
+        );
+
+    // Clear input fields and navigate back
+    _controllerName.clear();
+    _controllerMonth.clear();
+    _controllerAmount.clear();
+    _controllerBit.clear();
+    names.clear();
+    _selectedDate = null;
+
+    // Navigate back to previous screen
     Navigator.pop(context);
   }
 
@@ -108,134 +150,199 @@ class NameListWidgetState extends State<NameListWidget> {
     _controllerAmount.dispose();
     _controllerMonth.dispose();
     _controllerName.dispose();
+    _controllerBit.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(),
-      body: SingleChildScrollView(
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              TextField(
-                controller: _controllerName,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Enter the Name of the Chit',
+    final size = MediaQuery.of(context).size;
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(),
+        body: SingleChildScrollView(
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                const SizedBox(
+                  height: 8,
                 ),
-              ),
-              const SizedBox(
-                height: 15,
-              ),
-              TextField(
-                controller: _controllerMonth,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'No Of Month',
+                TextField(
+                  controller: _controllerName,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Enter the Name of the Chit',
+                  ),
                 ),
-              ),
-              const SizedBox(
-                height: 15,
-              ),
-              TextField(
-                controller: _controllerAmount,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Amount',
+                const SizedBox(
+                  height: 15,
                 ),
-              ),
-              const SizedBox(
-                height: 15,
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: TextField(
-                      controller: _controller,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        labelText: 'Enter a name',
+                TextField(
+                  controller: _controllerMonth,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'No Of Month',
+                  ),
+                ),
+                const SizedBox(
+                  height: 15,
+                ),
+                TextField(
+                  controller: _controllerAmount,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Amount',
+                  ),
+                ),
+                const SizedBox(
+                  height: 15,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        keyboardType: TextInputType.number,
+                        controller: _controllerBit,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: 'Enter a BitDate',
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(
-                    width: 15,
-                  ),
-                  Expanded(
-                    flex: 1,
-                    child: ElevatedButton(
-                      onPressed: _addName,
-                      child: const Text('Add'),
+                  ],
+                ),
+                const SizedBox(height: 15),
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: TextField(
+                        controller: _controller,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: 'Enter a name',
+                        ),
+                      ),
                     ),
+                    const SizedBox(
+                      width: 15,
+                    ),
+                    Expanded(
+                      flex: 1,
+                      child: ElevatedButton(
+                        onPressed: _addName,
+                        child: const Text('Add'),
+                      ),
+                    ),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Text('Starting Date'),
+                    const Spacer(),
+                    Text(_selectedDate == null
+                        ? 'No Date Selected'
+                        : formatter.format(_selectedDate!)),
+                    const SizedBox(
+                      width: 20,
+                    ),
+                    IconButton(
+                        onPressed: _presentDatePicker,
+                        icon: const Icon(Icons.calendar_month))
+                  ],
+                ),
+                const SizedBox(height: 5),
+                Row(
+                  children: [
+                    ElevatedButton(
+                      onPressed: _submitChitData,
+                      child: const Text('Save'),
+                    ),
+                    const SizedBox(
+                      width: 15,
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: const Text('Cancel'),
+                    )
+                  ],
+                ),
+                const SizedBox(height: 5),
+                Text('Number of the Persons ${personCount.toString()}'),
+                const SizedBox(height: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                        color: Colors
+                            .green, //const Color.fromARGB(255, 161, 170, 220)
+                        width: 5),
                   ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const Text('Starting Date'),
-                  const Spacer(),
-                  Text(_selectedDate == null
-                      ? 'No Date Selected'
-                      : formatter.format(_selectedDate!)),
-                  const SizedBox(
-                    width: 20,
-                  ),
-                  IconButton(
-                      onPressed: _presentDatePicker,
-                      icon: const Icon(Icons.calendar_month))
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  ElevatedButton(
-                    onPressed: _submitChitData,
-                    child: const Text('Save'),
-                  ),
-                  const SizedBox(
-                    width: 15,
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
+                  height: size.height / 4,
+                  width: size.width,
+                  child: ListView.separated(
+                    scrollDirection: Axis.vertical,
+                    separatorBuilder: (context, index) => const Divider(
+                      color: Colors.grey,
+                      thickness: 1.0,
+                    ),
+                    shrinkWrap: true,
+                    itemCount: names.length,
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                        title: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(names[index]),
+                            IconButton(
+                                onPressed: () {
+                                  _deleteName(index);
+                                },
+                                icon: const Icon(Icons.delete)),
+                          ],
+                        ),
+                      );
                     },
-                    child: const Text('Cancel'),
-                  )
-                ],
-              ),
-              const SizedBox(height: 20),
-              Text('Number of the Persons ${personCount.toString()}'),
-              const SizedBox(height: 20),
-              ListView.builder(
-                shrinkWrap: true,
-                itemCount: names.length,
-                itemBuilder: (context, index) {
-                  return Dismissible(
-                    key: Key(names[index]),
-                    onDismissed: (direction) => _deleteName(index),
-                    background: Container(
-                      color: Colors.red,
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 20),
-                      child: const Icon(Icons.delete),
-                    ),
-                    child: ListTile(
-                      title: Text(names[index]),
-                    ),
-                  );
-                },
-              ),
-            ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 }
+
+
+
+// Dismissible(
+//                         key: Key(names[index]),
+//                         onDismissed: (direction) => _deleteName(index),
+//                         background: Container(
+//                           color: Colors.red,
+//                           alignment: Alignment.centerRight,
+//                           padding: const EdgeInsets.only(right: 20),
+//                           child: const Icon(Icons.delete),
+//                         ),
+//                         child: ListTile(
+//                           title: Row(
+//                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                             children: [
+//                               Text(names[index]),
+//                               IconButton(
+//                                   onPressed: () {
+//                                     _deleteName(index);
+//                                   },
+//                                   icon: const Icon(Icons.delete)),
+//                             ],
+//                           ),
+//                         ),
+//                       );

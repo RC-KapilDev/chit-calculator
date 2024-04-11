@@ -42,31 +42,19 @@ class _HomeScreenState extends State<HomeScreen> {
         MaterialPageRoute(builder: (context) => DisplayScreen(chit: chit)));
   }
 
-  int monthCalculation(Chit chit) {
-    DateTime otherDate = chit.date;
-    DateTime now = DateTime.now();
-    int yearDiff = now.year - otherDate.year;
-    int monthDiff = now.month - otherDate.month;
-    int totalMonthDiff = (yearDiff * 12) + monthDiff;
-    // print(totalMonthDiff + chit.months);
-    return totalMonthDiff + 1;
-  }
-
   @override
   Widget build(BuildContext context) {
+    final cubit = context.read<ChitCubit>();
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => const NameListWidget()));
+        },
+        child: const Icon(Icons.add),
+      ),
       appBar: AppBar(
-        title: const Text('invest cal'),
-        actions: [
-          IconButton(
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const NameListWidget()));
-              },
-              icon: const Icon(Icons.add))
-        ],
+        title: const Text('Chit Calculator'),
       ),
       body: BlocBuilder<ChitCubit, List<Chit>>(
         builder: (context, chits) {
@@ -77,8 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 print(chits[index].name);
                 String totalpersons = chits[index].people.length.toString();
                 int compeletedMonth = 0;
-                compeletedMonth = monthCalculation(chits[index]);
-
+                compeletedMonth = cubit.monthCalculation(chits[index]);
                 return GestureDetector(
                   onTap: () {
                     _selectedChit(chits[index], context);

@@ -1,4 +1,7 @@
+import 'dart:ffi';
+
 import 'package:chit_calculator/cubit/chit_cubit.dart';
+import 'package:chit_calculator/widgets/list_people.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../model/datamodel.dart';
@@ -17,40 +20,24 @@ class DisplayScreen extends StatefulWidget {
 
 class _DisplayScreenState extends State<DisplayScreen> {
   double bufferAmount = 0;
+
   @override
   void initState() {
-    bufferAmount = toCalculateBuffer(widget.chit);
+    bufferAmount = context.read<ChitCubit>().toCalculateBuffer(widget.chit);
+
     super.initState();
   }
 
   double amount = 0;
-  int monthDiff(DateTime date) {
-    DateTime otherDate = date;
-    DateTime now = DateTime.now();
-    int yearDiff = now.year - otherDate.year;
-    int monthDiff = now.month - otherDate.month;
-    int totalMonthDiff = (yearDiff * 12) + monthDiff;
-    return totalMonthDiff + 1;
-  }
-
-  toCalculateBuffer(Chit chit) {
-    int noOfPeople = chit.people.length - monthDiff(chit.date);
-    double buffer = (chit.amount * (1 / 100)) * noOfPeople;
-    return buffer;
-  }
-
-  toCalculate(Chit chit, int bid) {
-    double buff = toCalculateBuffer(chit);
-    double deductable = chit.amount - (buff + bid);
-    double shareAmount = deductable / (chit.people.length);
-    return shareAmount;
-  }
 
   bool boolean = false;
   @override
   Widget build(BuildContext context) {
     var jiffy = Jiffy.parseFromDateTime(widget.chit.date);
     var jiffy1 = jiffy.add(months: widget.chit.months);
+    final size = MediaQuery.of(context).size;
+
+    final cubit = context.read<ChitCubit>();
 
     final TextEditingController controllerBid = TextEditingController();
     return Material(
@@ -62,7 +49,7 @@ class _DisplayScreenState extends State<DisplayScreen> {
               actions: [
                 IconButton(
                     onPressed: () {
-                      context.read<ChitCubit>().chitDelete(widget.chit);
+                      cubit.chitDelete(widget.chit);
                       Navigator.pop(context);
                     },
                     icon: const Icon(Icons.delete))
@@ -172,7 +159,10 @@ class _DisplayScreenState extends State<DisplayScreen> {
                           child: ElevatedButton(
                             onPressed: () {
                               var bid = int.tryParse(controllerBid.text);
-                              amount = toCalculate(widget.chit, bid!);
+                              if (bid == null) return;
+
+                              amount = cubit.toCalculate(widget.chit, bid);
+
                               if (amount == 0) {
                                 return;
                               } else {
@@ -190,38 +180,19 @@ class _DisplayScreenState extends State<DisplayScreen> {
                     ),
                   ),
                   boolean == true
-                      ? ListPeople(amount.ceil(), widget.chit)
+                      ? SizedBox(
+                          width: size.width,
+                          height: size.height / 2,
+                          child: ListPeople(
+                            amt: amount.ceil(),
+                            chit: widget.chit,
+                          ),
+                        )
                       : const Text('Please Enter a Bid'),
                 ]))
           ],
         ),
       ),
-    );
-  }
-
-  ListView ListPeople(int amt, Chit chit) {
-    return ListView.builder(
-      shrinkWrap: true,
-      itemCount: chit.people.length,
-      itemBuilder: (context, index) {
-        return Container(
-            margin: const EdgeInsets.only(left: 20, right: 20, bottom: 5),
-            width: double.infinity,
-            child: Card(
-                child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 15, horizontal: 10),
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Row(
-                        children: [
-                          Text('${chit.people[index]}'),
-                          const Spacer(),
-                          Text('$amt')
-                        ],
-                      ),
-                    ))));
-      },
     );
   }
 }
