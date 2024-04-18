@@ -3,6 +3,7 @@ import 'dart:ffi';
 import 'package:chit_calculator/cubit/chit_cubit.dart';
 import 'package:chit_calculator/widgets/list_people.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../model/datamodel.dart';
 import 'package:jiffy/jiffy.dart';
@@ -117,17 +118,20 @@ class _DisplayScreenState extends State<DisplayScreen> {
                 ),
               ],
             ),
-            Container(
-              margin: const EdgeInsets.all(20),
-              width: double.infinity,
-              child: Card(
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
-                  child: Text(
-                    'Calculated Amount :  ${bufferAmount.toString()}',
-                    style: const TextStyle(fontSize: 17),
-                    textAlign: TextAlign.center,
+            Visibility(
+              visible: true,
+              child: Container(
+                margin: const EdgeInsets.all(20),
+                width: double.infinity,
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 20, horizontal: 10),
+                    child: Text(
+                      'Calculated Amount :  ${bufferAmount.toString()}',
+                      style: const TextStyle(fontSize: 17),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
               ),

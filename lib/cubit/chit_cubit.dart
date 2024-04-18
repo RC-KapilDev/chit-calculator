@@ -36,17 +36,6 @@ class ChitCubit extends Cubit<List<Chit>> {
     emit([...state]);
   }
 
-// operations in chit calculator
-
-  // int monthDiff(DateTime date) {
-  //   DateTime otherDate = date;
-  //   DateTime now = DateTime.now();
-  //   int yearDiff = now.year - otherDate.year;
-  //   int monthDiff = now.month - otherDate.month;
-  //   int totalMonthDiff = (yearDiff * 12) + monthDiff;
-  //   return totalMonthDiff + 1;
-  // }
-
   int monthCalculation(Chit chit) {
     DateTime otherDate = chit.date;
     DateTime now = DateTime.now();
@@ -72,5 +61,11 @@ class ChitCubit extends Cubit<List<Chit>> {
     int noOfPeople = chit.people.length - monthCalculation(chit);
     double buffer = (chit.amount * (1 / 100)) * noOfPeople;
     return buffer;
+  }
+
+  bool iscompeleted(Chit chit) {
+    var monthRemaining = monthCalculation(chit);
+    var totalNumberpeople = chit.people.length;
+    return monthRemaining == totalNumberpeople;
   }
 }
