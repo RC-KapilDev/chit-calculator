@@ -1,10 +1,8 @@
-import 'dart:ffi';
-
 import 'package:chit_calculator/cubit/chit_cubit.dart';
 import 'package:chit_calculator/widgets/list_people.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../model/datamodel.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:chit_calculator/widgets/card_names.dart';
@@ -20,13 +18,19 @@ class DisplayScreen extends StatefulWidget {
 }
 
 class _DisplayScreenState extends State<DisplayScreen> {
-  double bufferAmount = 0;
+  double? bufferAmount;
 
   @override
   void initState() {
-    bufferAmount = context.read<ChitCubit>().toCalculateBuffer(widget.chit);
-
     super.initState();
+    print("DisplayScreen initState: widget.chit = ${widget.chit}");
+    Future<double> calculateBuffer =
+        context.read<ChitCubit>().toCalculateBuffer(widget.chit);
+    calculateBuffer.then((value) {
+      setState(() {
+        bufferAmount = value;
+      });
+    });
   }
 
   double amount = 0;
@@ -34,6 +38,8 @@ class _DisplayScreenState extends State<DisplayScreen> {
   bool boolean = false;
   @override
   Widget build(BuildContext context) {
+    print(bufferAmount);
+    print(widget.chit.people.length);
     var jiffy = Jiffy.parseFromDateTime(widget.chit.date);
     var jiffy1 = jiffy.add(months: widget.chit.months);
     final size = MediaQuery.of(context).size;
@@ -49,8 +55,10 @@ class _DisplayScreenState extends State<DisplayScreen> {
             AppBar(
               actions: [
                 IconButton(
-                    onPressed: () {
-                      cubit.chitDelete(widget.chit);
+                    onPressed: () async {
+                      SharedPreferences sharedPreferences =
+                          await SharedPreferences.getInstance();
+                      cubit.deleteChit(widget.chit, sharedPreferences);
                       Navigator.pop(context);
                     },
                     icon: const Icon(Icons.delete))

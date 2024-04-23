@@ -9,32 +9,65 @@ class ChitCubit extends Cubit<List<Chit>> {
 
   void addChit(Chit chit, SharedPreferences sharedPreferences) {
     if (chit.name.isEmpty) {
-      addError('Name cannot Empty');
-      return;
+      throw Exception('Name cannot be empty');
     }
-    List<String> sp =
-        [...state, chit].map((item) => jsonEncode(item.toMap())).toList();
-    print(chit.id);
-    sharedPreferences.setStringList('noOfChit', sp);
-    emit([...state, chit]);
+
+    List<Chit> updatedChits = [...state, chit];
+    _saveChitsToSharedPreferences(updatedChits, sharedPreferences);
+    emit(updatedChits);
   }
 
-  void loadChitDataFromSharedPreference(SharedPreferences sharedPreferences) {
-    List<String>? spList = sharedPreferences.getStringList('noOfChit');
-    // print(spList);
-    if (spList == null) {
-      return;
-    } else {
-      List<Chit> spListDecoded =
-          spList.map((item) => Chit.fromMap(jsonDecode(item))).toList();
-      emit(spListDecoded);
+  void loadChitsFromSharedPreferences(SharedPreferences sharedPreferences) {
+    List<String>? encodedChits = sharedPreferences.getStringList('noOfChit');
+    if (encodedChits != null) {
+      List<Chit> decodedChits =
+          encodedChits.map((json) => Chit.fromMap(jsonDecode(json))).toList();
+      emit(decodedChits);
     }
   }
 
-  void chitDelete(Chit chit) {
-    state.remove(chit);
-    emit([...state]);
+  void deleteChit(Chit chit, SharedPreferences sharedPreferences) {
+    List<Chit> updatedChits = List.from(state)..remove(chit);
+    _saveChitsToSharedPreferences(updatedChits, sharedPreferences);
+    emit(updatedChits);
   }
+
+  void _saveChitsToSharedPreferences(
+      List<Chit> chits, SharedPreferences sharedPreferences) {
+    List<String> encodedChits =
+        chits.map((chit) => jsonEncode(chit.toMap())).toList();
+    sharedPreferences.setStringList('noOfChit', encodedChits);
+  }
+
+  // void addChit(Chit chit, SharedPreferences sharedPreferences) {
+  //   if (chit.name.isEmpty) {
+  //     addError('Name cannot Empty');
+  //     return;
+  //   }
+  //   List<Chit> updatedChits = [...state, chit];
+  //   List<String> encodedChits =
+  //       updatedChits.map((chit) => jsonEncode(chit.toMap())).toList();
+
+  //   sharedPreferences.setStringList('noOfChit', encodedChits);
+  //   emit(updatedChits);
+  // }
+
+  // void loadChitDataFromSharedPreference(SharedPreferences sharedPreferences) {
+  //   List<String>? spList = sharedPreferences.getStringList('noOfChit');
+  //   // print(spList);
+  //   if (spList == null) {
+  //     return;
+  //   } else {
+  //     List<Chit> spListDecoded =
+  //         spList.map((item) => Chit.fromMap(jsonDecode(item))).toList();
+  //     emit(spListDecoded);
+  //   }
+  // }
+
+  // void chitDelete(Chit chit) {
+  //   state.remove(chit);
+  //   emit([...state]);
+  // }
 
   int monthCalculation(Chit chit) {
     DateTime otherDate = chit.date;
@@ -57,9 +90,16 @@ class ChitCubit extends Cubit<List<Chit>> {
     return shareAmount;
   }
 
-  toCalculateBuffer(Chit chit) {
+  Future<double> toCalculateBuffer(Chit chit) async {
+    print("lenght of the people in cubt ${chit.people.length}");
+    print("lenght of the people in cubt ${chit.amount}");
+    print("lenght of the people in cubt ${monthCalculation(chit)}");
+    print(
+        "lenght of the people in cubt ${(chit.amount * (1 / 100)) * chit.people.length}");
+
     int noOfPeople = chit.people.length - monthCalculation(chit);
     double buffer = (chit.amount * (1 / 100)) * noOfPeople;
+    print("buffer:$buffer");
     return buffer;
   }
 

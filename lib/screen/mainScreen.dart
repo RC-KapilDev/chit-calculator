@@ -26,15 +26,14 @@ class _HomeScreenState extends State<HomeScreen> {
   late SharedPreferences sharedPreferences;
   @override
   void initState() {
+    print("initsate here");
     initSharedPreferences();
     super.initState();
   }
 
   initSharedPreferences() async {
     sharedPreferences = await SharedPreferences.getInstance();
-    context
-        .read<ChitCubit>()
-        .loadChitDataFromSharedPreference(sharedPreferences);
+    context.read<ChitCubit>().loadChitsFromSharedPreferences(sharedPreferences);
   }
 
   void _selectedChit(Chit chit, BuildContext context) {
@@ -62,8 +61,9 @@ class _HomeScreenState extends State<HomeScreen> {
               shrinkWrap: true,
               itemCount: chits.length,
               itemBuilder: (ctx, index) {
-                print(chits[index].name);
-                String totalpersons = chits[index].people.length.toString();
+                print("len,${chits.length}");
+                // print(chits[index].name);
+                // String totalpersons = chits[index].people.length.toString();
                 int compeletedMonth = 0;
                 compeletedMonth = cubit.monthCalculation(chits[index]);
                 return GestureDetector(
